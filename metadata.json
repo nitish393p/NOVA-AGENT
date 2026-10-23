@@ -1,0 +1,12 @@
+{
+  "name": "Nova - Voice & Vision Real-Time AI Companion",
+  "description": "Full-duplex real-time voice and vision companion with barge-in, camera awareness, and episodic memory powered by Gemini Live.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

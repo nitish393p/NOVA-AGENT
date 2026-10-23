@@ -1,0 +1,39 @@
+{
+  "entities": {
+    "Memory": {
+      "title": "Memory",
+      "description": "An episodic memory, fact, preference, or context item stored from conversations with the AI companion.",
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Category of the memory (e.g. preference, project, technical, personal, bug, general)."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Concise summary of the remembered fact or note."
+        },
+        "detail": {
+          "type": "string",
+          "description": "Detailed description or context of the memory."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this memory was recorded."
+        },
+        "pinned": {
+          "type": "boolean",
+          "description": "Whether this memory is pinned as a high-priority context."
+        }
+      },
+      "required": ["summary", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/memories/{memoryId}": {
+      "schema": "Memory",
+      "description": "Persistent store of episodic memories and notes saved by or for the AI companion."
+    }
+  }
+}

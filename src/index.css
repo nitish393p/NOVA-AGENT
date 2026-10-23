@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@keyframes realisticBlink {
+  0%, 88%, 93%, 100% {
+    transform: scaleY(1);
+  }
+  90.5% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes realisticBreathe {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.004);
+  }
+}
+
+@keyframes empatheticNod {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(2.5px) rotate(0.8deg);
+  }
+  50% {
+    transform: translateY(0.5px) rotate(-0.4deg);
+  }
+  75% {
+    transform: translateY(2px) rotate(0.6deg);
+  }
+}
+
+@keyframes attentiveTilt {
+  0%, 100% {
+    transform: rotate(-2.8deg) translateY(-0.5px);
+  }
+  50% {
+    transform: rotate(-4.2deg) translateY(0.5px);
+  }
+}
+
+@keyframes conversationalSway {
+  0%, 100% {
+    transform: rotate(0deg) translateY(0px);
+  }
+  30% {
+    transform: rotate(1.5deg) translateY(-1.5px);
+  }
+  65% {
+    transform: rotate(-1.2deg) translateY(1px);
+  }
+}
+
+@keyframes earringSwayMotion {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(4deg);
+  }
+  75% {
+    transform: rotate(-3.5deg);
+  }
+}
+
+@keyframes heartWarmthPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes handMicroMotion {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2.5px) rotate(0.6deg);
+  }
+}
+
+@keyframes humanLifeMicroMotion {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  25% {
+    transform: translate(0.4px, -1.2px) rotate(0.2deg);
+  }
+  50% {
+    transform: translate(-0.3px, -2px) rotate(-0.15deg);
+  }
+  75% {
+    transform: translate(-0.5px, -0.8px) rotate(0.1deg);
+  }
+}
+
+@keyframes humanPhotoBlink {
+  0%, 88%, 93%, 100% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  90.5% {
+    opacity: 0.95;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes subtleShimmer {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px currentColor);
+  }
+}
+
+.animate-avatar-blink {
+  transform-origin: 50% 68%;
+  animation: realisticBlink 4.2s infinite ease-in-out;
+}
+
+.animate-avatar-breathe {
+  animation: realisticBreathe 4s infinite ease-in-out;
+}
+
+.animate-avatar-nod {
+  animation: empatheticNod 2.2s infinite ease-in-out;
+  transform-origin: 50% 85%;
+}
+
+.animate-avatar-tilt {
+  animation: attentiveTilt 4s infinite ease-in-out;
+  transform-origin: 50% 85%;
+}
+
+.animate-avatar-sway {
+  animation: conversationalSway 3.6s infinite ease-in-out;
+  transform-origin: 50% 85%;
+}
+
+.animate-earring-sway {
+  animation: earringSwayMotion 2.4s infinite ease-in-out;
+  transform-origin: 5px 5px;
+}
+
+.animate-heart-pulse {
+  animation: heartWarmthPulse 3s infinite ease-in-out;
+}
+
+.animate-hand-gesture {
+  animation: handMicroMotion 3s infinite ease-in-out;
+  transform-origin: 50% 100%;
+}
+
+.animate-human-presence {
+  animation: humanLifeMicroMotion 6s infinite ease-in-out;
+}
+
+.animate-human-blink {
+  transform-origin: 50% 40%;
+  animation: humanPhotoBlink 4s infinite ease-in-out;
+}
+
+.animate-subtle-shimmer {
+  animation: subtleShimmer 3s infinite ease-in-out;
+}
+
+/* Backward compatibility */
+.animate-cartoon-blink {
+  transform-origin: 50% 50%;
+  animation: realisticBlink 4.2s infinite ease-in-out;
+}
+
+.animate-cartoon-float {
+  animation: realisticBreathe 4s infinite ease-in-out;
+}
