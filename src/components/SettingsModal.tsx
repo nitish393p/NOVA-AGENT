@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LiveVoice } from '../types/companion';
+import { getAuthToken } from '../lib/firebase';
 import {
   Settings,
   X,
@@ -94,7 +95,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   isMeetingTextOnly = true,
   onToggleMeetingTextOnly,
 }) => {
+  const [geminiKey, setGeminiKey] = useState('');
+  const [keyStatus, setKeyStatus] = useState('');
+  const [savingKey, setSavingKey] = useState(false);
+
   if (!isOpen) return null;
+
+  const saveGeminiKey = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSavingKey(true);
+    setKeyStatus('');
+    try {
+      const token = await getAuthToken();
+      const response = await fetch('/api/account/gemini-key', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ key: geminiKey.trim() }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Firebase could not save your Gemini key.');
+      setGeminiKey('');
+      setKeyStatus(result.usingDefault ? 'Removed your saved key. The app default will be used.' : 'Your Gemini key is saved to Firebase and will be used for your assistant.');
+    } catch (error) {
+      setKeyStatus(error instanceof Error ? error.message : 'Could not save your Gemini key.');
+    } finally {
+      setSavingKey(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
@@ -121,6 +148,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Content */}
         <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
+          <form onSubmit={saveGeminiKey} className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-100">Your Gemini API key</h3>
+              <p className="mt-1 text-xs leading-5 text-zinc-400">Save or replace your key in Firebase. It is encrypted on the server and used for your assistant replies and live voice. Leave blank and save to use the app default.</p>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                value={geminiKey}
+                onChange={(event) => setGeminiKey(event.target.value)}
+                placeholder="Paste Gemini API key (blank removes saved key)"
+                className="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-cyan-500"
+              />
+              <button type="submit" disabled={savingKey} className="rounded-lg bg-cyan-500 px-3 py-2 text-xs font-semibold text-zinc-950 hover:bg-cyan-400 disabled:opacity-50">
+                {savingKey ? 'Saving…' : 'Save key'}
+              </button>
+            </div>
+            {keyStatus && <p role="status" className="text-xs text-cyan-200">{keyStatus}</p>}
+          </form>
+
           {/* Voice Persona Selector */}
           <div>
             <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5 mb-2.5">

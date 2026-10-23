@@ -613,6 +613,8 @@ export function useLiveCompanion({
           setVoiceInputNotice(msg.message || 'Sign-in is required for voice.');
           isManualDisconnectRef.current = true;
           ws.close();
+        } else if (msg.type === 'voice_notice') {
+          setVoiceInputNotice(msg.message || 'The voice assistant could not start.');
         } else if (msg.type === 'ready') {
           // A Live session can announce readiness before its first failure.
           // Preserve a pending turn so the response watchdog can use REST/TTS.
@@ -960,11 +962,10 @@ export function useLiveCompanion({
             prompt: text,
             imageBase64: frame ? `data:image/jpeg;base64,${frame}` : undefined,
             history: transcripts.slice(-6),
-            fastFallback: true,
           }),
         });
-        if (!response.ok) throw new Error(`Assistant request failed (${response.status}).`);
         const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Assistant request failed (${response.status}).`);
         if (!data.text) return;
         const { cleanText, emotion: parsedEmotion } = extractEmotionFromText(data.text);
         setCurrentEmotion(parsedEmotion);
@@ -985,6 +986,7 @@ export function useLiveCompanion({
         });
       } catch (err) {
         console.warn('[Live Hook] HTTP turn notice:', err);
+        setVoiceInputNotice(err instanceof Error ? err.message : 'The assistant could not reply. Check Firebase and Gemini settings.');
         setStatus('listening');
       }
     };

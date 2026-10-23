@@ -63,8 +63,8 @@ async function getUserApiKey(uid: string): Promise<string> {
     const record = snapshot.data() as { ciphertext: string; iv: string; tag: string };
     return decryptUserApiKey(record);
   } catch (err) {
-    console.warn("[Gemini] Could not read the user's encrypted API key; using the configured default if available.");
-    return apiKey;
+    console.warn('[Firebase] Could not read this account’s Gemini settings.');
+    throw new Error('Firebase could not load this account’s Gemini settings. Enable Cloud Firestore and verify the server service-account permissions.');
   }
 }
 
@@ -120,17 +120,22 @@ app.use(express.static(path.resolve(__dirname, 'public')));
 
 app.put('/api/account/gemini-key', requireFirebaseUser, async (req, res) => {
   const key = typeof req.body?.key === 'string' ? req.body.key.trim() : '';
-  if (!key || key.length > 512 || /\s/.test(key)) {
-    res.status(400).json({ error: 'Enter a valid Gemini API key, or leave it blank to use the app default.' });
+  if (key.length > 512 || /\s/.test(key)) {
+    res.status(400).json({ error: 'Enter a valid Gemini API key.' });
     return;
   }
   try {
+    if (!key) {
+      await userApiKeyRef((req as AuthenticatedRequest).authUid!).delete();
+      res.json({ success: true, usingDefault: true });
+      return;
+    }
     const encrypted = encryptUserApiKey(key);
     await userApiKeyRef((req as AuthenticatedRequest).authUid!).set({ ...encrypted, updatedAt: new Date().toISOString() });
     res.json({ success: true });
   } catch (err) {
-    console.error('[Gemini] Could not save the encrypted account API key:', (err as Error)?.message || err);
-    res.status(503).json({ error: 'Could not save your Gemini key. Enable Cloud Firestore and configure API_KEY_ENCRYPTION_SECRET, then try again.' });
+    console.error('[Firebase] Could not save encrypted account Gemini settings:', (err as Error)?.message || err);
+    res.status(503).json({ error: 'Firebase could not save your Gemini key. Enable Cloud Firestore, grant the server service account Firestore access, and configure API_KEY_ENCRYPTION_SECRET.' });
   }
 });
 
@@ -410,6 +415,8 @@ async function generateCompanionReply(
 
   // 1. Try modern gemini-3.8-flash if API key is active
   if (!skipRemote) try {
+    const userApiKey = userId ? await getUserApiKey(userId) : apiKey;
+    if (!userApiKey) throw new Error('No Gemini API key is configured for this account.');
     const parts: any[] = [];
     if (imageBase64) {
       parts.push({
@@ -429,8 +436,6 @@ async function generateCompanionReply(
     }
     contents.push({ role: 'user', parts });
 
-    const userApiKey = userId ? await getUserApiKey(userId) : apiKey;
-    if (!userApiKey) throw new Error('Gemini API key is not configured.');
     const response = await createGeminiClient(userApiKey).models.generateContent({
       model: 'gemini-3.8-flash',
       contents,
@@ -442,7 +447,8 @@ async function generateCompanionReply(
     if (response.text && response.text.trim()) {
       return response.text.trim();
     }
-  } catch (_e: any) {
+  } catch (error: any) {
+    if (error?.message?.startsWith('Firebase could not load this account')) throw error;
     // API key or network fallback: proceed to built-in conversational AI engine
   }
 
@@ -683,7 +689,7 @@ app.post('/api/companion/talk', requireFirebaseUser, async (req, res) => {
     res.json({ text: replyText });
   } catch (err: any) {
     console.error('Companion talk error:', err);
-    res.json({ text: "I'm right here with you! Could you please repeat that?" });
+    res.status(503).json({ error: err?.message || 'Gemini is temporarily unavailable. Check Firebase and your API key settings.' });
   }
 });
 
@@ -993,6 +999,7 @@ wss.on('connection', async (clientWs: WebSocket) => {
       if (activeSessionId !== currentSessionId) return;
       isConnecting = false;
       console.warn('[Live] Live socket fallback active:', err?.message || err);
+      sendToClient({ type: 'voice_notice', message: err?.message || 'Gemini Live is temporarily unavailable.' });
       sendToClient({
         type: 'ready',
         voice: selectedVoice,
@@ -1163,6 +1170,7 @@ wss.on('connection', async (clientWs: WebSocket) => {
             sendToClient({ type: 'turn_complete' });
           }).catch((err) => {
             console.error('[WS] Fallback reply error:', err);
+            sendToClient({ type: 'voice_notice', message: err?.message || 'Gemini could not reply. Check your Firebase settings.' });
           });
         }
       } else if (msg.type === 'barge_in') {
